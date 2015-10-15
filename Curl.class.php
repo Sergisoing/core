@@ -44,19 +44,22 @@ class Curl {
 		$this->method = $method;
 	}
 	
+	public function setIncludeHeader($s = false) {
+		$this->includeHeader = $s;
+	}
 	public function setPostData( $data ) {
 		$this->postData = $data;
 	}
 	public function setHeaders( $headers ) {
 		$this->headers = $headers;
 	}
-	public function __construct( $url = '', $headers = array(),$timeout = 10 ) {
+	public function __construct( $url = '', $headers = array(),$time_out = 10 ) {
 		try{
 			$this->handel = curl_init();
 		} catch (Exception $e) {
 			throw(new CurlException ('curl init error'));
 		}
-		$this->setTimeOut($timeout);
+		$this->setTimeOut($time_out);
 		if($url) {
 			$this->setUrl( $url );
 		}
@@ -75,19 +78,35 @@ class Curl {
 		if( $url ) {
 			$this->setUrl($url);
 		}
-		if ( $origin ) {
+		if ( !$origin ) {
 			$data = http_build_query($data);
 		}
 		$this->setPostData($data);
 		$this->setMethod( 'POST' );
 		return $this->doRequest();
 	}
-
+	
+	//curl upload file
+	public function uploadFile( $path, $filename , $type ,$url = '' ) {
+		if( !function_exists('curl_file_create') ) {
+			function curl_file_create($path, $type, $filename) {
+				return '@'. $url .';filename=' . $filename . ';type=' . $type;
+			}
+		}
+		if($url) {
+			$this->setUrl($url);
+		}
+		var_dump(curl_file_create( realpath($path), $type, $filename ));
+		$this->setPostData(curl_file_create( realpath($path), $type, $filename ));
+		$this->setMethod( 'POST' );
+		$this->doRequest();
+	}
 
 	private function doRequest() {
 		if( !$this->url ) {
 			throw(new CurlException ('url not found'));
 		}
+		curl_setopt($this->handel, CURLOPT_TIMEOUT, $this->time_out);
 		curl_setopt($this->handel, CURLOPT_URL, $this->url);
 		if( 'POST' ==  $this->method ) {
 			curl_setopt( $this->handel, CURLOPT_POST, 1 );
@@ -111,7 +130,11 @@ class Curl {
 			return $res;
 		}
 	}
+
+	public function getRequestInfo() {
+		echo curl_getinfo($this->handel, CURLINFO_HEADER_OUT );
+	} 
 }
-class CurlExcetion extends Exception{
+class CurlException extends Exception{
 	
 }
