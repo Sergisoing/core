@@ -4,7 +4,7 @@
 	
 	$curl = new Curl();
 	try{
-		echo $curl->uploadFile('../upload.php', 'testupload', 'text/html', 'http://192.168.0.102/index.php' );
+		var_dump($curl->uploadFile('../img/01.img', 'testupload', 'image/jpeg', 'http://192.168.0.103/index.php' ));
 		echo $curl->getRequestInfo();
 	} catch( Exception $e  ) {
 		echo $e->getMessage();

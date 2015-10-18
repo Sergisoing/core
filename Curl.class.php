@@ -25,6 +25,12 @@ class Curl {
 	private $time_out = 0;
 	//referer
 	private $referer = null;
+
+	public function setDebug( $debug = true ) {
+		if( $debug ) {
+			$this->debug = true;	
+		}
+	}
 	
 	public function setUrl($url) {
 		if( strpos($url, 'https://') ) {
@@ -90,21 +96,24 @@ class Curl {
 	public function uploadFile( $path, $filename , $type ,$url = '' ) {
 		if( !function_exists('curl_file_create') ) {
 			function curl_file_create($path, $type, $filename) {
-				return '@'. $url .';filename=' . $filename . ';type=' . $type;
+				return '@'. $path .( $filename ? ';filename=' . $filename : '' ) . ( $type ? ';type=' . $type :'' );
 			}
 		}
 		if($url) {
 			$this->setUrl($url);
 		}
-		var_dump(curl_file_create( realpath($path), $type, $filename ));
-		$this->setPostData(curl_file_create( realpath($path), $type, $filename ));
+		$file = array( 'file' => curl_file_create( realpath($path), $type, $filename ) );
+		$this->setPostData( $file );
 		$this->setMethod( 'POST' );
-		$this->doRequest();
+		return $this->doRequest();
 	}
 
 	private function doRequest() {
 		if( !$this->url ) {
 			throw(new CurlException ('url not found'));
+		}
+		if( $this->is_debug ) {
+			curl_setopt($this->handel, CURLINFO_HEADER_OUT, true);
 		}
 		curl_setopt($this->handel, CURLOPT_TIMEOUT, $this->time_out);
 		curl_setopt($this->handel, CURLOPT_URL, $this->url);
@@ -132,8 +141,10 @@ class Curl {
 	}
 
 	public function getRequestInfo() {
-		echo curl_getinfo($this->handel, CURLINFO_HEADER_OUT );
+		var_dump( curl_getinfo($this->handel) );
 	} 
+
+
 }
 class CurlException extends Exception{
 	
