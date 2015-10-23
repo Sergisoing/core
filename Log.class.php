@@ -19,9 +19,9 @@ class Log{
                 }   
                 //按照日期存
                 if(self::$log_way == 'day') {
-                        $filename = ROOT . LOG_PATH . $type . '/' . date('Ymd') . '-' . $name . '.' . $type;
+                        $filename = $path . date('Ymd') . '-' . $name . '.' . $type;
                 } else {
-                        $filename = ROOT . LOG_PATH . $type . '/' . date('YmdH') . '-' . $name . '.' . $type;
+                        $filename = $path . date('YmdH') . '-' . $name . '.' . $type;
                 }
 		if (($handel = fopen( $filename, 'a' )) != false) {
 			fwrite($handel, $cons . '     ' . date('Y-m-d H:i:s') . "\n\r");
@@ -29,10 +29,22 @@ class Log{
 		}
 	}
 
+	/*
+	@function: 记录错误信息
+	@pararm: $con(string 记录的内容), $name(记录文件名)
+	@return: void
+	*/
 	public static function error ($con, $name = 'system') {
 		self::write($con, 'error', $name);
 	}
+
+	/*
+	@function: 记录普通信息日志
+	@param: $info(string 记录的信息), $name (文件名)
+	@return: void
+	*/
+	public static function info ($info, $name = 'system') {
+		self::write($info, 'info', $name);
+	}
 }
-
-
 ?>
