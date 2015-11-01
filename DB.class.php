@@ -1,38 +1,90 @@
-<?php
-/*
-	数据库类，采用PDO链接数据，单例模式
-*/
+<?php 
+/**
+ *@author：YQC
+ *@function: DB produce,singe instance mode
+ */
+require( './Config.class.php' );
+require( './Log.class.php' );
 class DB{
-	//接口
-	private static $ins;
-	//数据名称
-	private static $database_name = 'mysql';
+		//the db instatnce
+		private static $ins = null;
+		//the db config 
+		private $config = null;
 
-	//私有化构造方法
-	private function __construct() {
-				
-	}
-	
-	/*
-	@function: 获取PDO句柄，数据库操作链接资源
-	@param: void
-	@return: void
-	*/
-	private static function getIns() {
-		$DSN = self::$database_name . ':dbname=' . DB_NAME . ';host=' . DB_HOST . ';port=' . DB_PORT;
-		self::$ins = new PDO($DSN, DB_USER, DB_PASS);
-		var_dump(self::$ins);
-	}
-	
-	/*
-	@function: 获取多条结果
-	@param: $sql (string sql语句) ,$data( array, 需要的参数 )
-	@return: 语法错误返回NULL， 没有结果返回false,  有结果返回数组
-	*/
-	public static function getAll() {
-		self::getIns();
-	}
+		/**
+		 *@param: void
+		 *@function: 创建一个PDO实例
+		 */
+		private function __construct() {
+				$this->config = Config::getDBConfig();
+				try{
+						self::$ins = new PDO($this->config['DSN'], $this->config['DB_USER'], $this->config['DB_PW']);
+						self::$ins->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+						self::$ins->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
+				} catch ( PDOException $e ) {
+						Log::error($e->getMessage(), 'db');
+						die('DB error');
+				}
+		}
+
+		/**
+		 *@param:$sql (sql查询语句)， [$data(array 绑定的参数)]
+		 *@func:获取多行数据
+		 *@return: 成功返回结果，结果为空时返回false，sql语句错误时返回null
+		 */
+		public static function getAll ($sql, $data = array()) {
+				self::getIns();
+				try{
+						Log::info($sql . ' ------ values ' . json_encode($data), 'sql');
+						$sth = self::$ins->prepare($sql);
+						$sth->execute($data);
+						$res = $sth->fetchAll(PDO::FETCH_ASSOC);
+						return $res === NULL ? NULL : ( $res ? $res : false );
+				} catch (Exception $e){
+						Log::error($e->getMessage(), 'db');
+				}
+		}
+
+		/**
+		 *@param: void
+		 *@func: 获取数据库接口
+		 */
+		public static function getIns() {
+				if (self::$ins) {
+						return self::$ins;
+				} else {
+						new self();
+						return self::$ins;
+				}
+		}
+
+		/**
+		*@param: $sql(string sql), $data(array values)
+		*@func: 获取单行记录
+		*@return: array( key => value, key => value )
+		*/
+		public static function getOne($sql, $data = array()) {
+			self::getIns();
+			try{
+				Log::info($sql . ' ------ values ' . json_encode($data), 'sql');
+				$sth = self::$ins->prepare($sql);
+				$sth->execute($data);
+				$res = $sth->fetch(PDO::FETCH_ASSOC);
+				return $res === NULL ? NULL : ( $res ? $res : false );
+			} catch (Exception $e) {
+				Log::error($e->getMessage(), $data);
+			}
+		}
+		 
+
+		/**
+		 *@param:void
+		 *@func: 防止克隆
+		 */
+		public function __clone() {
+				return null;
+		}
 }
-	
-
+$db = DB::getOne('select * from user where name = ?', array('yangqinchuadn'));
+var_dump($db);
 ?>
