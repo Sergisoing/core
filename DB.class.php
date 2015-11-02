@@ -59,32 +59,71 @@ class DB{
 		}
 
 		/**
-		*@param: $sql(string sql), $data(array values)
-		*@func: 获取单行记录
-		*@return: array( key => value, key => value )
-		*/
+		 *@param: $sql(string sql), $data(array values)
+		 *@func: 获取单行记录
+		 *@return: array( key => value, key => value )
+		 */
 		public static function getOne($sql, $data = array()) {
-			self::getIns();
-			try{
-				Log::info($sql . ' ------ values ' . json_encode($data), 'sql');
-				$sth = self::$ins->prepare($sql);
-				$sth->execute($data);
-				$res = $sth->fetch(PDO::FETCH_ASSOC);
-				return $res === NULL ? NULL : ( $res ? $res : false );
-			} catch (Exception $e) {
-				Log::error($e->getMessage(), $data);
-			}
+				self::getIns();
+				try{
+						Log::info($sql . ' ------ values ' . json_encode($data), 'sql');
+						$sth = self::$ins->prepare($sql);
+						$sth->execute($data);
+						$res = $sth->fetch(PDO::FETCH_ASSOC);
+						return $res === NULL ? NULL : ( $res ? $res : false );
+				} catch (Exception $e) {
+						Log::error($e->getMessage(), 'db');
+				}
 		}
-		 
+
+		/**
+		 *@param: $sql String
+		 *@param: $data Array
+		 *@func: 获取单个数据，一个单元格
+		 *@return: 成功返回结果，结果为空时返回false，sql语句错误时返回null
+		 */
+		public static function getCell($sql, $data = array()) {
+				self::getIns();
+				try{
+						Log::info($sql . ' ------ values ' . json_encode($data), 'sql');
+						$sth = self::$ins->prepare($sql);
+						$sth->execute($data);
+						$res = $sth->fetchColumn();
+						return $res === NULL ? NULL : ( $res ? $res : false );
+				} catch (Exception $e) {
+						Log::error($e->getMessage(), 'db');
+				}
+
+		}
+
+		/**
+		 * 执行其他sql
+		 *@param: $sql String
+		 *@param: $data Array
+		 *@return: 成功返回sql影响的条数 失败返回NULL
+		 */
+		public static function exec($sql, $data = array()) {
+				self::getIns();
+				try{
+						Log::info($sql . ' ------ values ' . json_encode($data), 'sql');
+						$sth = self::$ins->prepare($sql);
+						$sth->execute($data);
+						return $sth->rowCount();
+				} catch (Exception $e) {
+						 Log::error($e->getMessage(), 'db');
+				}
+
+		}
+
 
 		/**
 		 *@param:void
 		 *@func: 防止克隆
 		 */
-		public function __clone() {
+		private function __clone() {
 				return null;
 		}
 }
-$db = DB::getOne('select * from user where name = ?', array('yangqinchuadn'));
+$db = DB::getCell('insert into user values (?,?,?)', array('','qinlvying','1325249560@qq.com'));
 var_dump($db);
 ?>
